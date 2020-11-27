@@ -18,11 +18,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 
     // Open next link in the queue and update current depth
-    const [nextLink, nextDepth] = tabs[tabId].dequeue();
-    curDepths[tabId] = nextDepth;
+    let nextLink = null;
+    if (!tabs[tabId].isEmpty()) {
+        const [link, depth] = tabs[tabId].dequeue();
+        curDepths[tabId] = depth;
+        nextLink = link;
+    }
 
-    console.log(tabs);
-    console.log(curDepths);
-
+    // console.log(tabs[tabId]);
+    // console.log(curDepths[tabId]);
     sendResponse({link: nextLink});
 });

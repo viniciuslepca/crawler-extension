@@ -7,7 +7,16 @@ class Queue {
 
     enqueue(element) {
         // adding element to the queue
-        this.items.push(element);
+        // Only add element if it is not already present
+        const strItems = JSON.stringify(this.items);
+        let strElement = JSON.stringify(element);
+        // Only consider the actual link, ignoring weight
+        if (Array.isArray(element)) {
+            strElement = JSON.stringify(element[0]);
+        }
+
+        if (strItems.indexOf(strElement) === -1)
+            this.items.push(element);
     }
 
     dequeue() {
