@@ -1,31 +1,38 @@
-const maxDepth = 5;
-let tabs = {};
-let curDepths = {};
+var maxDepth = 3;
+var tabs = {}; // Keeps track of links to be accessed
+var allTabs = {}; // Keeps track of all links added to avoid repetition even after dequeue
+var curDepths = {}; // Keeps track of the currently visited link's depth
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    const tabId = sender.tab.id;
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    var tabId = sender.tab.id;
     if (!tabs.hasOwnProperty(tabId)) {
         tabs[tabId] = new Queue();
+        allTabs[tabId] = [];
         curDepths[tabId] = 0;
     }
 
     // Store the links one level deeper only if not at max depth
     if (curDepths[tabId] <= maxDepth) {
-        const newDepth = curDepths[tabId] + 1;
-        for (let link of request.links) {
-            tabs[tabId].enqueue([link, newDepth])
+        var newDepth = curDepths[tabId] + 1;
+        for (var i = 0; i < request.links.length; i++) {
+            var link = request.links[i];
+            // Only add if never visited
+            if (allTabs[tabId].indexOf(link) === -1) {
+                tabs[tabId].enqueue([link, newDepth]);
+                allTabs[tabId].push(link);
+            }
         }
     }
 
     // Open next link in the queue and update current depth
-    let nextLink = null;
+    var nextLink = null;
     if (!tabs[tabId].isEmpty()) {
-        const [link, depth] = tabs[tabId].dequeue();
-        curDepths[tabId] = depth;
-        nextLink = link;
+        var item = tabs[tabId].dequeue();
+        nextLink = item[0];
+        curDepths[tabId] = item[1];
     }
 
-    // console.log(tabs[tabId]);
-    // console.log(curDepths[tabId]);
+    console.log(tabs[tabId]);
+    console.log(curDepths[tabId]);
     sendResponse({link: nextLink});
 });
