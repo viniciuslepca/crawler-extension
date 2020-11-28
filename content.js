@@ -1,3 +1,5 @@
+console.log("Executing link extraction");
+
 var maxLinks = 3;
 
 // Generates a random sample from an array
@@ -44,36 +46,37 @@ function getLocation(href) {
     }
 }
 
-window.addEventListener("load", function() {
-    setTimeout(function() {
-        var links = [];
-        var aTags = document.getElementsByTagName("A");
-        var localHostName = window.location.hostname;
-        for (var i = 0; i < aTags.length; i++) {
-            var aTag = aTags[i];
-            try {
-                var url = getLocation(aTag.href);
-                // Only add links from the same domain
-                if (url.hostname === localHostName) {
-                    links.push(aTag.href);
-                }
-            } catch (e) {
-                console.log("failed to generate URL");
+console.log("Setting timeout");
+setTimeout(function () {
+    var links = [];
+    var aTags = document.getElementsByTagName("A");
+    var localHostName = window.location.hostname;
+    for (var i = 0; i < aTags.length; i++) {
+        var aTag = aTags[i];
+        try {
+            var url = getLocation(aTag.href);
+            // Only add links from the same domain
+            if (url.hostname === localHostName) {
+                links.push(aTag.href);
             }
+        } catch (e) {
+            console.log("failed to generate URL");
         }
-        links = getRandomSubarray(links);
+    }
+    console.log(links);
+    links = getRandomSubarray(links);
+    console.log(links);
 
-        // Remove the '#' character, it was causing errors and doesn't change the actual url
-        for (var j = 0; j < links.length; j++) {
-            links[j] = links[j].split("#")[0];
+    // Remove the '#' character, it was causing errors and doesn't change the actual url
+    for (var j = 0; j < links.length; j++) {
+        links[j] = links[j].split("#")[0];
+    }
+
+    // Send message to background script to see if we should open the pages (based on depth)
+    chrome.runtime.sendMessage({links: links}, function (response) {
+        var link = response.link;
+        if (link !== null) {
+            window.location = link;
         }
-
-        // Send message to background script to see if we should open the pages (based on depth)
-        chrome.runtime.sendMessage({links: links}, function(response) {
-            var link = response.link;
-            if (link !== null) {
-                window.location = link;
-            }
-        })
-    }, 500)
-}, false);
+    })
+}, 500);
