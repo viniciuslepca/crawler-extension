@@ -1,6 +1,6 @@
 console.log("Executing link extraction");
 
-var maxLinks = 3;
+var maxLinks = 8;
 
 // Generates a random sample from an array
 function getRandomSubarray(arr, size) {
@@ -25,7 +25,7 @@ function getRandomSubarray(arr, size) {
 
 // Extracts the host from a URL
 // Based on
-function getLocation(href) {
+function getUrlDetails(href) {
     var reURLInformation = new RegExp([
         '^(https?:)//', // protocol
         '(([^:/?#]*)(?::([0-9]+))?)', // host (hostname and port)
@@ -46,6 +46,26 @@ function getLocation(href) {
     }
 }
 
+// Detects whether a URL is a web page (instead of something like a PDF or an image)
+// Based on https://stackoverflow.com/questions/6997262/how-to-pull-url-file-extension-out-of-url-string-using-javascript
+function isWebPage(url) {
+    // Remove everything to the last slash in URL
+    url = url.substr(1 + url.lastIndexOf("/"));
+
+    // Break URL at ? and take first part (file name, extension)
+    url = url.split('?')[0];
+
+    // Sometimes URL doesn't have ? but #, so we should also do the same for #
+    url = url.split('#')[0];
+
+    // Now we have only the file name
+    var fileExt = url.split('.').pop();
+    if (fileExt === "html" || fileExt === "php" || fileExt === "asp") return true; // Check for allowed extension types
+    if (fileExt.length === url.length) return true; // Files without an extension
+    // All else
+    return false;
+}
+
 console.log("Setting timeout");
 setTimeout(function () {
     var links = [];
@@ -54,18 +74,17 @@ setTimeout(function () {
     for (var i = 0; i < aTags.length; i++) {
         var aTag = aTags[i];
         try {
-            var url = getLocation(aTag.href);
-            // Only add links from the same domain
-            if (url.hostname === localHostName) {
-                links.push(aTag.href);
+            var url = aTag.href;
+            var urlDetails = getUrlDetails(url);
+            // Only add links from the same domain and that are web pages
+            if (urlDetails.hostname === localHostName && isWebPage(url)) {
+                links.push(url);
             }
         } catch (e) {
             console.log("failed to generate URL");
         }
     }
-    console.log(links);
     links = getRandomSubarray(links);
-    console.log(links);
 
     // Remove the '#' character, it was causing errors and doesn't change the actual url
     for (var j = 0; j < links.length; j++) {
@@ -79,4 +98,4 @@ setTimeout(function () {
             window.location = link;
         }
     })
-}, 500);
+}, 100);
