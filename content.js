@@ -60,7 +60,8 @@ function isWebPage(url) {
 
     // Now we have only the file name
     var fileExt = url.split('.').pop();
-    if (fileExt === "html" || fileExt === "php" || fileExt === "asp") return true; // Check for allowed extension types
+    var acceptableExtensions = ["html", "php", "asp"];
+    if (acceptableExtensions.indexOf(fileExt) !== -1) return true; // Check for allowed extension types
     if (fileExt.length === url.length) return true; // Files without an extension
     // All else
     return false;
